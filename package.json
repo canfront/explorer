@@ -1,20 +1,20 @@
 {
-  "name": "wl-explorer",
-  "version": "0.1.9",
-  "author": "weilan<https://github.com/hql7>",
+  "name": "vue-explorer",
+  "version": "0.0.1",
+  "author": "acanstudio<https://github.com/canfront>",
   "license": "GNU",
   "private": false,
   "main": "lib/wl-explorer.common.js",
   "bugs": {
-    "url": "https://github.com/hql7/wl-explorer/issues"
+    "url": "https://github.com/canfront/vue-explorer/issues"
   },
-  "homepage": "https://github.com/hql7/wl-explorer/#readme",
-  "keywords": "SkyDrive Explorer Cloud-disk file-manager 文件管理器 资源管理器 云盘 网盘操作台 vue element-ui wl-explorer",
+  "homepage": "https://github.com/canfront/vue-explorer/#readme",
+  "keywords": "SkyDrive Explorer Cloud-disk file-manager 文件管理器 资源管理器 云盘 网盘操作台 vue element-ui vue-explorer",
   "description": "用于vue框架的文件管理器插件，类云盘，网盘。File manager plug-in for vue framework, cloud disk.  ",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lib": "vue-cli-service build --target lib --name wl-explorer --dest lib ./src/pages/index.js",
+    "lib": "vue-cli-service build --target lib --name vue-explorer --dest lib ./src/pages/index.js",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -41,7 +41,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+git@github.com:hql7/wl-explorer.git"
+    "url": "git+git@github.com:canfront/vue-explorer.git"
   },
   "eslintConfig": {
     "root": true,
