@@ -1,10 +1,10 @@
 {
-  "name": "vue-explorer",
+  "name": "vue-explorer-canfront",
   "version": "0.0.1",
   "author": "acanstudio<https://github.com/canfront>",
   "license": "GNU",
   "private": false,
-  "main": "lib/wl-explorer.common.js",
+  "main": "lib/vue-explorer.common.js",
   "bugs": {
     "url": "https://github.com/canfront/vue-explorer/issues"
   },
@@ -22,9 +22,7 @@
     "core-js": "^3.3.2",
     "element-ui": "^2.4.5",
     "vue": "^2.6.10",
-    "vue-video-player": "^5.0.2",
-    "wl-explorer": "^0.1.4",
-    "wl-vue-select": "^0.5.7"
+    "vue-video-player": "^5.0.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.0.0",
