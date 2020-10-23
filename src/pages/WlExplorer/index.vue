@@ -279,11 +279,11 @@
 </template>
 
 <script>
-import submitBtn from "@/components/submit-btn.vue"; // 导入防抖组件
-import fileView from "@/components/file-view.vue"; // 导入预览组件
-import fadeIn from "@/components/fade-in.vue"; // 引入滑入组件
-import uploadItem from "@/components/upload-item"; // 导入导入组件
-import { arrayToTree, splicParentsUntil, download } from "@/util"; // 导入组装树函数、拼接路径函数
+import submitBtn from "../../components/submit-btn.vue"; // 导入防抖组件
+import fileView from "../../components/file-view.vue"; // 导入预览组件
+import fadeIn from "../../components/fade-in.vue"; // 引入滑入组件
+import uploadItem from "../../components/upload-item"; // 导入导入组件
+import { arrayToTree, splicParentsUntil, download } from "../../util"; // 导入组装树函数、拼接路径函数
 const guid = "00000000-0000-0000-0000-000000000000";
 export default {
   name: "wlExplorer",
