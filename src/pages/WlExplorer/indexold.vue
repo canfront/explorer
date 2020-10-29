@@ -122,7 +122,7 @@
           @selection-change="filrChecked"
           highlight-current-row
           :border="showBorder"
-          :data="pathDatas"
+          :data="self_data"
           class="wl-table"
           ref="wl-table"
         >
@@ -182,7 +182,7 @@
         </el-table>
         <!-- 列表型文件列表 -->
         <ul class="wl-list" v-show="!layout.show_list">
-          <li class="wl-list-item wl-is-folder" v-for="(i, idx) in pathDatas" :key="i.Id">
+          <li class="wl-list-item wl-is-folder" v-for="(i, idx) in self_data" :key="i.Id">
             <el-checkbox class="wl-checkbox" @change="listItemCheck($event,i)" v-model="i._checked"></el-checkbox>
             <div @click="enterTheLower(i, i[selfIsFolder])">
               <img :src="fileTypeIcon(i)" class="name-col-icon" alt="文件类型图标" />
@@ -207,7 +207,7 @@
           @selection-change="filrChecked"
           highlight-current-row
           :border="showBorder"
-          :data="fileDatas"
+          :data="self_data"
           class="wl-table"
           ref="wl-table"
         >
@@ -267,7 +267,7 @@
         </el-table>
         <!-- 列表型文件列表 -->
         <ul class="wl-list" v-show="!layout.show_list">
-          <li class="wl-list-item wl-is-folder" v-for="(i, idx) in fileDatas" :key="i.Id">
+          <li class="wl-list-item wl-is-folder" v-for="(i, idx) in self_data" :key="i.Id">
             <el-checkbox class="wl-checkbox" @change="listItemCheck($event,i)" v-model="i._checked"></el-checkbox>
             <div @click="enterTheLower(i, i[selfIsFolder])">
               <img :src="fileTypeIcon(i)" class="name-col-icon" alt="文件类型图标" />
@@ -449,8 +449,7 @@ export default {
       default: true
     },
     // 文件表格数据
-    pathDatas: Array,
-    fileDatas: Array,
+    data: Array,
     // 文件表头数据【[参数：所有el-Table-column Attributes] (https://element.eleme.cn/#/zh-CN/component/table)】
     columns: Array,
     /**
@@ -913,28 +912,7 @@ export default {
       this.layout.view = true;
     },
     // 处理数据变动
-    handlePathDataChange(val) {
-      let _data = val || [];
-      if (this.isFolderFn) {
-        _data.forEach(i => {
-          i.isFolder = this.isFolderFn(i);
-        });
-      }
-      if (this.isLockFn) {
-        _data.forEach(i => {
-          i.isLock = this.isLockFn(i);
-        });
-      }
-      if (this.file.key) {
-        this.self_data = _data;
-        return;
-      }
-      let _act = this.path.history.find(i => i.id === this.file.id);
-      if (!_act) return;
-      _act.data = _data;
-      this.routerActive(_act, _data);
-    },
-    handleFileDataChange(val) {
+    handleDataChange(val) {
       let _data = val || [];
       if (this.isFolderFn) {
         _data.forEach(i => {
@@ -1045,11 +1023,8 @@ export default {
   },
   watch: {
     // 检测data数据更新列表
-    pathDatas(val) {
-      this.handlePathDataChange(val);
-    },
-    fileDatas(val) {
-      this.handleFileDataChange(val);
+    data(val) {
+      this.handleDataChange(val);
     },
     // 检测所有路径，组成树
     allPath(val) {
@@ -1062,11 +1037,8 @@ export default {
     }
   },
   created() {
-    if (this.pathDatas && this.pathDatas.length > 0) {
-      this.handlePathDataChange(this.pathDatas);
-    }
-    if (this.fileDatas && this.fileDatas.length > 0) {
-      this.handleFileDataChange(this.fileDatas);
+    if (this.data && this.data.length > 0) {
+      this.handleDataChange(this.data);
     }
   }
 };
