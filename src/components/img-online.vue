@@ -10,7 +10,8 @@
 export default {
   props: {
     url: {
-      type: String
+      type: String,
+      default: 'http://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/10/22/%E5%BF%85-%E8%A6%81%E7%82%B9.png',
     }
   },
   mounted() {

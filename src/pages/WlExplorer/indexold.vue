@@ -949,7 +949,6 @@ export default {
       _data.forEach((i, idx) => {
         i._id = `_col_${idx}`;
       });
-        console.log('fffffffffffjjjjjj', _data);
       return _data;
     },
     // 自身配置项

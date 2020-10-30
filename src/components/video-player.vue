@@ -33,7 +33,7 @@ export default {
         sources: [
           {
             type: "video/mp4",
-            src: "" //你的视频地址（必填）
+            src: "",//http://1254153797.vod2.myqcloud.com/41f91735vodsh1254153797/11bbe9245285890808875998543/BPgvrA4wHkkA.mp4" //你的视频地址（必填）
           }
         ],
         poster: "", //你的封面地址
@@ -58,7 +58,10 @@ export default {
   },
   computed: {
     playerOptions() {
-      return { ...this.selfOptions, ...this.options };
+        console.log(this.options);
+      let returnObj = { ...this.selfOptions, ...this.options };
+        console.log('ffff', returnObj);
+        return returnObj;
     },
     player() {
       return this.$refs.videoPlayer.player;

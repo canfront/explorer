@@ -130,7 +130,7 @@
           <el-table-column v-if="showIndex" align="center" type="index" label="序号" width="55"></el-table-column>
           <slot name="table-column-top"></slot>
           <el-table-column
-            v-for="i of selfColumns"
+            v-for="i of formatPathColumns"
             show-overflow-tooltip
             :key="i._id"
             :prop="i.prop"
@@ -165,7 +165,7 @@
               >
                 <!-- 不同文件类型图标区 -->
                 <div class="namecol-iconbox">
-                  <img :src="fileTypeIcon(scope.row)" class="name-col-icon" alt="文件类型图标" />
+                  <img :src="pathTypeIcon(scope.row)" class="name-col-icon" alt="文件类型图标" />
                 </div>
                 <!-- 不同文件类型 显示内容-->
                 <div class="namecol-textbox">
@@ -185,7 +185,7 @@
           <li class="wl-list-item wl-is-folder" v-for="(i, idx) in pathDatas" :key="i.Id">
             <el-checkbox class="wl-checkbox" @change="listItemCheck($event,i)" v-model="i._checked"></el-checkbox>
             <div @click="enterTheLower(i, i[selfIsFolder])">
-              <img :src="fileTypeIcon(i)" class="name-col-icon" alt="文件类型图标" />
+              <img :src="pathTypeIcon(i)" class="name-col-icon" alt="文件类型图标" />
               <p class="list-item-name" :title="i[selfProps.name]">
                 {{
                 i.formatter
@@ -215,7 +215,7 @@
           <el-table-column v-if="showIndex" align="center" type="index" label="序号" width="55"></el-table-column>
           <slot name="table-column-top"></slot>
           <el-table-column
-            v-for="i of selfColumns"
+            v-for="i of formatFileColumns"
             show-overflow-tooltip
             :key="i._id"
             :prop="i.prop"
@@ -235,7 +235,7 @@
           >
             <template slot-scope="scope">
               <!-- 非名称列 -->
-              <template v-if="i.prop !== selfProps.name">
+              <template v-if="i.prop !== fileSelfProps.name">
                 {{
                 i.formatter
                 ? i.formatter(scope.row, scope.column, scope.row[i.prop],scope.$index)
@@ -250,7 +250,7 @@
               >
                 <!-- 不同文件类型图标区 -->
                 <div class="namecol-iconbox">
-                  <img :src="fileTypeIcon(scope.row)" class="name-col-icon" alt="文件类型图标" />
+                  <img :src="fileTypeItem(scope.row, 'path')" class="name-col-icon" alt="文件类型图标" />
                 </div>
                 <!-- 不同文件类型 显示内容-->
                 <div class="namecol-textbox">
@@ -270,12 +270,12 @@
           <li class="wl-list-item wl-is-folder" v-for="(i, idx) in fileDatas" :key="i.Id">
             <el-checkbox class="wl-checkbox" @change="listItemCheck($event,i)" v-model="i._checked"></el-checkbox>
             <div @click="enterTheLower(i, i[selfIsFolder])">
-              <img :src="fileTypeIcon(i)" class="name-col-icon" alt="文件类型图标" />
-              <p class="list-item-name" :title="i[selfProps.name]">
+              <img :src="fileTypeItem(i, 'path')" class="name-col-icon" alt="文件类型图标" />
+              <p class="list-item-name" :title="i[fileSelfProps.name]">
                 {{
                 i.formatter
-                ? i.formatter(i, null, i[selfProps.name], idx)
-                : i[selfProps.name]
+                ? i.formatter(i, null, i[fileSelfProps.name], idx)
+                : i[fileSelfProps.name]
                 }}
               </p>
             </div>
@@ -374,6 +374,8 @@ export default {
   components: { submitBtn, fileView, fadeIn, uploadItem },
   data() {
     return {
+      previewType: '',
+      previewOptions: {},
       load: {
         del: false, // 删除
         move: false, // 移动
@@ -452,13 +454,15 @@ export default {
     pathDatas: Array,
     fileDatas: Array,
     // 文件表头数据【[参数：所有el-Table-column Attributes] (https://element.eleme.cn/#/zh-CN/component/table)】
-    columns: Array,
+    pathColumns: Array,
+    fileColumns: Array,
     /**
      * 配置项
      * isFolder: Boolean
      * name: String 表示名称列的字段
      */
     props: Object,
+    fileProps: Object,
     // 所有文件路径 用于文件地址输入框自动提示,如不传则使用历史记录
     allPath: Array,
     // 校验是否文件夹函数，（row）参数为当前行数据，用于复杂类型，当isFolderFn优先使用计算结果，不存在时使用props配置内的isFolder字段
@@ -494,12 +498,12 @@ export default {
       default: true
     },
     // 预览文件类型
-    previewType: {
+    /*previewType: {
       type: String,
       default: "img"
-    },
+    },*/
     // 预览文件地址或配置项
-    previewOptions: Object,
+    //previewOptions: Object,
     // 拼接路径配置项
     splicOptions: Object,
     size: {
@@ -726,6 +730,7 @@ export default {
      * isFolder: Boolean 行是否文件夹
      */
     enterTheLower(row, isFolder) {
+        console.log(isFolder, 'ffffaaaaa');
       if (!isFolder) {
         this.previewFile(row);
         return;
@@ -848,8 +853,7 @@ export default {
         );
       };
     },
-    // 根据文件类型显示图标
-    fileTypeIcon(row) {
+    pathTypeIcon(row) {
       let _path = "";
       // 文件夹
       if (row[this.selfIsFolder]) {
@@ -858,37 +862,53 @@ export default {
           : require("./images/folder@3x.png");
         return _path;
       }
+    },
+    // 根据文件类型显示图标
+    fileTypeItem(row, type) {
+      let _path = '';
+      let _fileType = '';
       // 其他根据后缀类型
-      let _suffix = row[this.selfProps.suffix];
+      let _suffix = row[this.fileSelfProps.suffix];
       if (!_suffix) {
         _path = require("./images/file_none@3x.png");
-        return _path;
+        _fileType = '';
+        return type == 'path' ? _path : _fileType;
       }
       if (["jpg", "jpeg", "png", "gif", "bmp"].includes(_suffix)) {
         // 图片
         _path = require("./images/file_img@3x.png");
+        _fileType = 'image';
       } else if (["zip", "rar", "7z"].includes(_suffix)) {
         _path = require("./images/file_zip@3x.png");
+        _fileType = 'zip';
       } else if (
         ["avi", "mp4", "rmvb", "flv", "mov", "m2v", "mkv"].includes(_suffix)
       ) {
+        _fileType = 'video';
         _path = require("./images/file_video@3x.png");
       } else if (["mp3", "wav", "wmv", "wma"].includes(_suffix)) {
+        _fileType = 'audio';
         _path = require("./images/file_mp3@3x.png");
       } else if (["xls", "xlsx"].includes(_suffix)) {
+        _fileType = 'xlsx';
         _path = require("./images/file_excel@3x.png");
       } else if (["doc", "docx"].includes(_suffix)) {
+        _fileType = 'docx';
         _path = require("./images/file_docx@3x.png");
       } else if ("pdf" == _suffix) {
+        _fileType = 'pdf';
         _path = require("./images/file_pdf@3x.png");
       } else if ("ppt" == _suffix) {
+        _fileType = 'ppt';
         _path = require("./images/file_ppt@3x.png");
       } else if ("txt" == _suffix) {
+        _fileType = 'txt';
         _path = require("./images/file_txt@3x.png");
       } else {
+        _fileType = 'txt';
         _path = require("./images/file_none@3x.png");
       }
-      return _path;
+      return type == 'path' ? _path : _fileType;
     },
     // 记录多选列表数据
     filrChecked(val) {
@@ -906,11 +926,34 @@ export default {
     },
     // 预览文件
     previewFile(row) {
-      this.$emit("preview", row, this.showPreview);
+        console.log(row, 'rrrrr');
+      let previewType = this.fileTypeItem(row, 'type');
+      //previewType = 'image';
+      //previewType = 'audio';
+      //previewType = 'video';
+      //previewType = 'xlsx';
+
+      this.previewType = previewType;
+      //row.url = 'http://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/10/22/%E5%BF%85-%E8%A6%81%E7%82%B9.png';
+      //row.url = 'https://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/10/27/%E4%BA%8C%E5%AD%97%E9%80%89%E6%8B%A9%E9%A2%98%E8%AF%AD%E9%9F%B3.mp3';
+      //row.url = 'http://1254153797.vod2.myqcloud.com/41f91735vodsh1254153797/11bbe9245285890808875998543/BPgvrA4wHkkA.mp4';
+      //row.url = 'https://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/09/17/%E7%AB%A0%E8%8A%82.xlsx';
+      switch (previewType) {
+        case 'video':
+          this.previewOptions = {sources: [{type: "video/mp4", src: row.url}]};
+          break;
+        default :
+          this.previewOptions = row.url;
+      }
+
+
+      this.$emit("preview", row, this.showPreview());
     },
     // 打开预览组件
     showPreview() {
+        console.log(this.layout);
       this.layout.view = true;
+        console.log(this.layout, 'fhhhhhh');
     },
     // 处理数据变动
     handlePathDataChange(val) {
@@ -965,14 +1008,40 @@ export default {
       });
       return _data;
     },
-    // 自身表头数据
-    selfColumns() {
-      let _data = this.columns || [];
+    formatFileColumns() {
+      let _data = this.fileColumns || [];
       _data.forEach((i, idx) => {
         i._id = `_col_${idx}`;
       });
-        console.log('fffffffffffjjjjjj', _data);
       return _data;
+    },
+    // 自身表头数据
+    formatPathColumns() {
+      let _data = this.pathColumns || [];
+      _data.forEach((i, idx) => {
+        i._id = `_col_${idx}`;
+      });
+        console.log(this.pathColumns, 'ffffffffff', _data);
+      return _data;
+    },
+    fileSelfProps() {
+      return {
+        isFolder: "isFolder", // Boolean 用于有布尔值字段表示数据是否文件夹类型的情况,当使用isFolderFn函数时，此参数会被忽略
+        isLock: "isLock", // Boolean 用于有布尔值字段表示数据是否锁定文件类型的情况,当使用isLockFn函数时，此参数被忽略
+        name: "name", // String 用于显示名称列的字段
+        suffix: "suffix", // String 用于判断后缀或显示文件类型列的字段
+        match: "name", // String 用于设定输入框自动补全的匹配字段
+        splic: true, // Boolean 用于设定输入框自动补全的匹配字段是否需要将match字段和祖先节点拼接
+        pathName: "name", // String 路径数据 显示名称字段
+        pathId: "id", // String 路径数据 id字段
+        pathPid: "pid", // String 路径数据 pid字段
+        pathChildren: "children", // String 路径数据 children字段
+        pathDisabled: "disabled", // String 路径数据 禁用字段
+        pathConnector: "\\", // String 路径父子数据拼接连接符,默认为'\'
+        pathParents: "parents", // String 路径数据所有直系祖先节点自增长identityId逗号拼接
+        pathIdentityId: "identityId", // String 路径数据自增长id
+        ...this.fileProps
+      };
     },
     // 自身配置项
     selfProps() {

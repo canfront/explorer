@@ -36,6 +36,7 @@ export default {
   },
   computed: {
     audioUrl() {
+      return 'https://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/10/27/%E4%BA%8C%E5%AD%97%E9%80%89%E6%8B%A9%E9%A2%98%E8%AF%AD%E9%9F%B3.mp3';
       return this.url;
     }
   },
