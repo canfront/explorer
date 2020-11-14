@@ -10,22 +10,21 @@
       </el-dropdown>
       <el-form-item>
         <el-button type="primary" @click="handleFolder('add')">新增文件夹</el-button>
-        <el-button :disabled="disabledEditFolder" @click="handleFolder('edit')">编辑文件夹</el-button>
+        <!--<el-button :disabled="disabledEditFolder" @click="handleFolder('edit')">编辑文件夹</el-button>-->
         <submit-btn type="danger" :size="size" @btn="handleDel" :status="load.del">删除</submit-btn>
         <el-button @click="showUpload">上传文件</el-button>
         <!-- solt自定义头部按钮区 -->
         <slot name="header-btn"></slot>
       </el-form-item>
-      <el-form-item>
+      <!--<el-form-item>
         <el-dropdown trigger="click" placement="bottom" @command="handleDropdown">
           <el-button type="primary" plain>
             更多操作
             <i class="el-icon-arrow-down el-icon--right"></i>
           </el-button>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item command="wl-move">移动</el-dropdown-item>
+              <el-dropdown-item command="wl-move">移动</el-dropdown-item>
             <el-dropdown-item command="wl-download">下载</el-dropdown-item>
-            <!-- props自定义头部更多操作 -->
             <el-dropdown-item
               v-for="i of selfHeaderDropdown"
               :key="i.id"
@@ -34,11 +33,10 @@
               :divided="i.divided"
               :disabled="i.disabled"
             >{{i.name}}</el-dropdown-item>
-            <!-- solt自定义头部更多操作 -->
             <slot name="header-dropdown"></slot>
           </el-dropdown-menu>
         </el-dropdown>
-      </el-form-item>
+      </el-form-item>-->
       <el-form-item v-show="uploading.ing">
         <span>正在上传：</span>
         <span class="c-blue u-uploading-name">{{uploading.name}}</span>
@@ -165,7 +163,7 @@
               <!-- 名称列 -->
               <div
                 v-else
-                @click="enterTheLower(scope.row, scope.row[selfIsFolder])"
+                @click="enterTheLower(scope.row, true)"
                 class="wl-name-col wl-is-folder"
               >
                 <!-- 不同文件类型图标区 -->
@@ -189,7 +187,7 @@
         <ul class="wl-list" v-show="!layout.show_list">
           <li class="wl-list-item wl-is-folder" v-for="(i, idx) in pathDatas" :key="i.Id">
             <el-checkbox class="wl-checkbox" @change="listItemCheck($event,i)" v-model="i._checked"></el-checkbox>
-            <div @click="enterTheLower(i, i[selfIsFolder])">
+            <div @click="enterTheLower(i, true)">
               <img :src="pathTypeIcon(i)" class="name-col-icon" alt="文件类型图标" />
               <p class="list-item-name" :title="i[selfProps.name]">
                 {{
@@ -250,7 +248,7 @@
               <!-- 名称列 -->
               <div
                 v-else
-                @click="enterTheLower(scope.row, scope.row[selfIsFolder])"
+                @click="enterTheLower(scope.row, false)"
                 class="wl-name-col wl-is-folder"
               >
                 <!-- 不同文件类型图标区 -->
@@ -274,7 +272,7 @@
         <ul class="wl-list" v-show="!layout.show_list">
           <li class="wl-list-item wl-is-folder" v-for="(i, idx) in fileDatas" :key="i.Id">
             <el-checkbox class="wl-checkbox" @change="listItemCheck($event,i)" v-model="i._checked"></el-checkbox>
-            <div @click="enterTheLower(i, i[selfIsFolder])">
+            <div @click="enterTheLower(i, false)">
               <img :src="fileTypeItem(i, 'path')" class="name-col-icon" alt="文件类型图标" />
               <p class="list-item-name" :title="i[fileSelfProps.name]">
                 {{
@@ -477,7 +475,7 @@ export default {
     // 所有文件路径 用于文件地址输入框自动提示,如不传则使用历史记录
     allPath: Array,
     // 校验是否文件夹函数，（row）参数为当前行数据，用于复杂类型，当isFolderFn优先使用计算结果，不存在时使用props配置内的isFolder字段
-    isFolderFn: Function,
+    //isFolderFn: Function,
     // 是否锁定文件、文件夹函数,true则不可进行操作
     isLockFn: Function,
     // 是否使用自带上传组件
@@ -634,25 +632,6 @@ export default {
         : this.$emit("search", this.file, true);
     },
     /**
-     * 往历史里添加新的步骤
-     * file: Object 路径数据{id: 路径id, pid: 父级路径id, path: 路径名}
-     * data: Array 当前路径下的数据
-     */
-    routerPush(file, data = []) {
-      splicParentsUntil(this.allPath, file, this.selfProps);
-      this.clearSearchKey();
-      this.path.history.push({
-        ...file,
-        data
-      });
-      this.self_data = data;
-      this.file.pid = file.pid;
-      this.file.id = file.id;
-      this.file.path = splicParentsUntil(this.allPath, file, this.selfProps);
-      this.path.level = !file.id || file.id === guid ? 1 : 2;
-      this.path.index = -1; // 将步骤从新回到原位
-    },
-    /**
      * 处理当前步骤数据
      * file: Object 路径数据{id: 路径id, pid: 父级路径id, path: 路径名}
      * data: Array 当前路径下的数据
@@ -748,7 +727,8 @@ export default {
         this.previewFile(row);
         return;
       }
-      let _children = this.path.history.find(
+
+      /*let _children = this.path.history.find(
         i => i.id === row[this.selfProps.pathId]
       );
       if (_children) {
@@ -759,14 +739,15 @@ export default {
         );
         this.routerPush(_children, _children.data);
         return;
-      }
+      }*/
       // 历史找不到子集时 请求更新
-      this.routerPush({
+      /*this.routerPush({
         id: row[this.selfProps.pathId],
         pid: row[this.selfProps.pathPid],
         path: row[this.selfProps.pathName]
-      });
-      this.$emit("search", this.file, true);
+      });*/
+      console.log(this.file, row, 'nnnnnnnnn');
+      this.$emit("search", row, true);
     },
     // 文件、文件夹移动
     fileMove() {
@@ -868,13 +849,10 @@ export default {
     },
     pathTypeIcon(row) {
       let _path = "";
-      // 文件夹
-      if (row[this.selfIsFolder]) {
-        _path = row[this.selfIsLock]
-          ? require("./images/file_automatic@3x.png")
-          : require("./images/folder@3x.png");
-        return _path;
-      }
+      _path = row[this.selfIsLock]
+        ? require("./images/file_automatic@3x.png")
+        : require("./images/folder@3x.png");
+      return _path;
     },
     // 根据文件类型显示图标
     fileTypeItem(row, type) {
@@ -1007,7 +985,28 @@ export default {
       if (!_act) return;
       _act.data = _data;
       this.routerActive(_act, _data);
-    }
+    },
+
+
+    /**
+     * 往历史里添加新的步骤
+     * file: Object 路径数据{id: 路径id, pid: 父级路径id, path: 路径名}
+     * data: Array 当前路径下的数据
+     */
+    /*routerPush(file, data = []) {
+      splicParentsUntil(this.allPath, file, this.selfProps);
+      this.clearSearchKey();
+      this.path.history.push({
+        ...file,
+        data
+      });
+      this.self_data = data;
+      this.file.pid = file.pid;
+      this.file.id = file.id;
+      this.file.path = splicParentsUntil(this.allPath, file, this.selfProps);
+      this.path.level = !file.id || file.id === guid ? 1 : 2;
+      this.path.index = -1; // 将步骤从新回到原位
+    },*/
   },
   computed: {
     // 自身头部更多操作自定义内容
@@ -1080,10 +1079,6 @@ export default {
         disabled: this.selfProps.pathDisabled
       };
     },
-    // 将是否文件夹的两种判断方式合并返回
-    selfIsFolder() {
-      return this.isFolderFn ? "isFolder" : this.selfProps.isFolder;
-    },
     // 将是否锁定文件、文件夹的两种判断方式合并返回
     selfIsLock() {
       return this.isLockFn ? "isLock" : this.selfProps.isLock;
@@ -1119,7 +1114,13 @@ export default {
         this.file_checked_data.length !== 1 ||
         !this.file_checked_data[0][this.selfIsFolder]
       );
-    }
+    },
+
+
+    // 将是否文件夹的两种判断方式合并返回
+    /*selfIsFolder() {
+      return this.isFolderFn ? "isFolder" : this.selfProps.isFolder;
+    },*/
   },
   watch: {
     // 检测data数据更新列表

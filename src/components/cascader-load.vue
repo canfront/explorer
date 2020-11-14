@@ -3,13 +3,12 @@
   <el-cascader
     :props="props"
     :value="currentValue"
+    :show-all-levels="false"
     clearable></el-cascader>
   </span>
 </template>
 
 <script>
-
-let parent_id = 0;
 
 export default {
   data() {
@@ -17,12 +16,13 @@ export default {
     return {
       props: {
         lazy: true,
+        checkStrictly: true,
         lazyLoad (node, resolve) {
           const { level } = node;
           console.log(level, 'aaaa', node, 'nnnnnnnnmmm', resolve);
 
           setTimeout(() => {
-            const nodes = Array.from({ length: level + 1 })
+            /*const nodes = Array.from({ length: level + 1 })
               .map(item => ({
                 value: ++parent_id,
                 label: `选项${parent_id}`,
@@ -30,7 +30,7 @@ export default {
               }));
               console.log(nodes, 'naaffffff');
             // 通过调用resolve将子节点数据返回，通知组件数据加载完成
-            //resolve(nodes);
+            //resolve(nodes);*/
             _self.attachmentPathModel.$fetch({query: {parent_id: node.value, action: 'list', 'point_scene': 'keyvalue'}}).then(response => {
               let keyField = response.key;
               let nameField = response.name;
@@ -59,19 +59,11 @@ console.log('hhafffffffff', response, nodes);
     }
   },
   created() {
-    //if (this.attachmentPathModel.entity) {
-      //this.getPathDatas()
-    //}
   },
   props: {
     attachmentPathModel: {type: Function},
   },
   methods: {
-    getPathDatas() {
-      this.attachmentPathModel.$fetch({params: {action: 'my-routes'}}).then(response => {
-        console.log('ppppppppp', response);
-      })
-    },
   }
 };
 </script>
