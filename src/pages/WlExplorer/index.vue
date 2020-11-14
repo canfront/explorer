@@ -3,6 +3,11 @@
   <div class="wl-explorer">
     <!-- 头部按钮区 -->
     <el-form class="wl-header-btn" :inline="true" :size="size" @submit.native.prevent>
+      <el-dropdown split-button size="small" type="primary" @command="changeSystem">{{fileSystem[currentSystem]}}
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item v-for="(option, optionKey) in fileSystem" :command="optionKey" :key="optionKey">{{option}}</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
       <el-form-item>
         <el-button type="primary" @click="handleFolder('add')">新增文件夹</el-button>
         <el-button :disabled="disabledEditFolder" @click="handleFolder('edit')">编辑文件夹</el-button>
@@ -300,14 +305,15 @@
     </template>
     <!-- 移动文件区 -->
     <el-dialog title="移动文件" width="520px" :visible.sync="layout.move">
-      <!--<wlTreeSelect
+      <cascaderLoad
         class="u-full"
         :size="size"
         :data="tree_path"
+        :attachmentPathModel="attachmentPathModel"
         :props="selfMoveProps"
         :nodeKey="selfProps.pathId"
         v-model="move_selected"
-      ></wlTreeSelect>-->
+      ></cascaderLoad>
       <span slot="footer" class="dialog-footer">
         <el-button :size="size" @click="layout.move = false">取 消</el-button>
         <submit-btn :size="size" @btn="fileMove" :status="load.move">确 定</submit-btn>
@@ -325,15 +331,16 @@
             class="template_form rule-form"
           >
             <el-form-item label="文件路径">
-              <!--<wlTreeSelect
+              <cascaderLoad
                 class="u-full"
                 :size="size"
                 :data="tree_path"
                 :props="selfMoveProps"
                 :nodeKey="selfProps.pathId"
+                :attachmentPathModel="attachmentPathModel"
                 v-model="upload_selected"
                 @change="uploadPathChange"
-              ></wlTreeSelect>-->
+              ></cascaderLoad>
             </el-form-item>
             <el-form-item label="导入文件">
               <uploadItem
@@ -366,12 +373,13 @@
 import submitBtn from "../../components/submit-btn.vue"; // 导入防抖组件
 import fileView from "../../components/file-view.vue"; // 导入预览组件
 import fadeIn from "../../components/fade-in.vue"; // 引入滑入组件
+import cascaderLoad from "../../components/cascader-load.vue"; // 引入滑入组件
 import uploadItem from "../../components/upload-item"; // 导入导入组件
 import { arrayToTree, splicParentsUntil, download } from "../../util"; // 导入组装树函数、拼接路径函数
 const guid = "00000000-0000-0000-0000-000000000000";
 export default {
   name: "wlExplorer",
-  components: { submitBtn, fileView, fadeIn, uploadItem },
+  components: { submitBtn, fileView, fadeIn, uploadItem, cascaderLoad},
   data() {
     return {
       previewType: '',
@@ -425,6 +433,7 @@ export default {
     };
   },
   props: {
+    attachmentPathModel: {type: Function},
     /**
      * 头部更多操作自定义内容
      * 需要包含内容：
@@ -456,6 +465,8 @@ export default {
     // 文件表头数据【[参数：所有el-Table-column Attributes] (https://element.eleme.cn/#/zh-CN/component/table)】
     pathColumns: Array,
     fileColumns: Array,
+    fileSystem: Object,
+    currentSystem: String,
     /**
      * 配置项
      * isFolder: Boolean
@@ -512,6 +523,9 @@ export default {
     }
   },
   methods: {
+    changeSystem(system) {
+      alert(system);
+    },
     /**
      * 文件夹编辑操作
      * type: string 添加add 编辑edit
@@ -730,7 +744,6 @@ export default {
      * isFolder: Boolean 行是否文件夹
      */
     enterTheLower(row, isFolder) {
-        console.log(isFolder, 'ffffaaaaa');
       if (!isFolder) {
         this.previewFile(row);
         return;
@@ -926,7 +939,6 @@ export default {
     },
     // 预览文件
     previewFile(row) {
-        console.log(row, 'rrrrr');
       let previewType = this.fileTypeItem(row, 'type');
       //previewType = 'image';
       //previewType = 'audio';
@@ -951,9 +963,7 @@ export default {
     },
     // 打开预览组件
     showPreview() {
-        console.log(this.layout);
       this.layout.view = true;
-        console.log(this.layout, 'fhhhhhh');
     },
     // 处理数据变动
     handlePathDataChange(val) {
@@ -1021,7 +1031,6 @@ export default {
       _data.forEach((i, idx) => {
         i._id = `_col_${idx}`;
       });
-        console.log(this.pathColumns, 'ffffffffff', _data);
       return _data;
     },
     fileSelfProps() {
