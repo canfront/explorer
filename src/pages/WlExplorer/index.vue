@@ -3,6 +3,13 @@
   <div class="wl-explorer">
     <!-- 头部按钮区 -->
     <el-form class="wl-header-btn" :inline="true" :size="size" @submit.native.prevent>
+      <el-breadcrumb separator="/"  class="app-breadcrumb">
+        <span v-if="pathDetail.info">
+        <el-breadcrumb-item v-for="(pathDetail, pathKey) in pathDetail.info.parentChains" :key="pathKey"><a @click="changePath(7)">{{pathDetail.path}}</a></el-breadcrumb-item>
+        </span>
+      </el-breadcrumb>
+    </el-form>
+    <el-form class="wl-header-btn" :inline="true" :size="size" @submit.native.prevent>
       <el-dropdown split-button size="small" type="primary" @command="changeSystem">{{fileSystem[currentSystem]}}
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item v-for="(option, optionKey) in fileSystem" :command="optionKey" :key="optionKey">{{option}}</el-dropdown-item>
@@ -56,65 +63,6 @@
       </el-form-item>
     </el-form>
     <!--文件路径操作区-->
-    <el-form
-      :inline="true"
-      :size="size"
-      :model="file"
-      class="wl-header-file"
-      @submit.native.prevent
-    >
-      <el-form-item class="file-path-box">
-        <div
-          class="file-path-text"
-          :class="{small: size=='small'}"
-          v-show="!layout.edit_path"
-          @click="handleFilePath"
-        >
-          <img class="file-path-img" src="./images/folder@3x.png" alt="文件夹" title="文件夹" />
-          {{file.path}}
-        </div>
-        <el-autocomplete
-          class="u-full"
-          ref="file-path-ipt"
-          placeholder="请输入文件路径"
-          v-model="file.path"
-          v-if="layout.edit_path"
-          @keyup.enter.native="filePathChange"
-          @select="filePathChange"
-          :fetch-suggestions="pathQuerySearch"
-        >
-          <img
-            slot="prefix"
-            class="file-path-img"
-            src="./images/folder@3x.png"
-            alt="文件夹"
-            title="文件夹"
-          />
-        </el-autocomplete>
-      </el-form-item>
-      <el-form-item class="file-search-box">
-        <el-input v-model="file.key" placeholder="请输入关键字搜索" @keyup.enter.native="fileSearch()">
-          <el-button slot="append" icon="el-icon-search file-search" @click="fileSearch()"></el-button>
-        </el-input>
-      </el-form-item>
-      <el-form-item class="file-handle-box">
-        <i
-          class="iconfont icon-wl-left file-path-handle"
-          :class="{'u-disabled':pathIsStart}"
-          @click="pathBtn('prv')"
-        ></i>
-        <i
-          class="iconfont icon-wl-right file-path-handle"
-          :class="{'u-disabled':pathIsEnd}"
-          @click="pathBtn('next')"
-        ></i>
-        <i
-          class="iconfont icon-wl-up file-path-handle"
-          :class="{'u-disabled':path.level===1}"
-          @click="pathBtn('top')"
-        ></i>
-      </el-form-item>
-    </el-form>
     <!-- 主内容区 -->
     <el-scrollbar class="wl-main-scroll">
       <!-- 文件列表区 -->
@@ -307,6 +255,7 @@
         class="u-full"
         :size="size"
         :data="tree_path"
+        :rootPaths="rootPaths"
         :attachmentPathModel="attachmentPathModel"
         :props="selfMoveProps"
         :nodeKey="selfProps.pathId"
@@ -333,6 +282,7 @@
                 class="u-full"
                 :size="size"
                 :data="tree_path"
+                :rootPaths="rootPaths"
                 :props="selfMoveProps"
                 :nodeKey="selfProps.pathId"
                 :attachmentPathModel="attachmentPathModel"
@@ -432,6 +382,8 @@ export default {
   },
   props: {
     attachmentPathModel: {type: Function},
+    rootPaths: {type: Object},
+    pathDetail: {type: Object},
     /**
      * 头部更多操作自定义内容
      * 需要包含内容：
@@ -521,8 +473,11 @@ export default {
     }
   },
   methods: {
+    changePath(parentId) {
+      return this.$route.path;
+    },
     changeSystem(system) {
-      alert(system);
+      //alert(system);
     },
     /**
      * 文件夹编辑操作
@@ -1010,6 +965,10 @@ export default {
   },
   computed: {
     // 自身头部更多操作自定义内容
+    pathDetailTest() {
+    console.log(this.pathDetail, 'pppppppdd');
+    return 'ffff';
+    },
     selfHeaderDropdown() {
       let _data = this.headerDropdown || [];
       _data.forEach((i, idex) => {
