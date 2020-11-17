@@ -4,8 +4,10 @@
     <!-- 头部按钮区 -->
     <el-form class="wl-header-btn" :inline="true" :size="size" @submit.native.prevent>
       <el-breadcrumb separator="/"  class="app-breadcrumb">
-        <span v-if="pathDetail.info">
-        <el-breadcrumb-item v-for="(pathDetail, pathKey) in pathDetail.info.parentChains" :key="pathKey"><a @click="changePath(7)">{{pathDetail.path}}</a></el-breadcrumb-item>
+        <el-breadcrumb-item >当前目录：<a @click="changePath(0)">根目录</a></el-breadcrumb-item>
+        <span v-if="pathDetail.parentChains">
+          <el-breadcrumb-item v-for="(pathDetail, pathKey) in pathDetail.parentChains" :key="pathKey"><a @click="changePath(pathDetail)">{{pathDetail.path}}</a></el-breadcrumb-item>
+          <el-breadcrumb-item v-if="pathDetail.path">{{pathDetail.path}}</el-breadcrumb-item>
         </span>
       </el-breadcrumb>
     </el-form>
@@ -59,6 +61,23 @@
           class="iconfont icon-wl-grid file-show-type"
           v-show="!layout.show_list"
           @click="layout.show_list=!layout.show_list"
+        ></i>
+      </el-form-item>
+      <el-form-item class="file-handle-box">
+        <i
+          class="iconfont icon-wl-left file-path-handle"
+          :class="{'u-disabled':pathIsStart}"
+          @click="pathBtn('prv')"
+        ></i>
+        <i
+          class="iconfont icon-wl-right file-path-handle"
+          :class="{'u-disabled':pathIsEnd}"
+          @click="pathBtn('next')"
+        ></i>
+        <i
+          class="iconfont icon-wl-up file-path-handle"
+          :class="{'u-disabled':path.level===1}"
+          @click="pathBtn('top')"
         ></i>
       </el-form-item>
     </el-form>
@@ -473,8 +492,11 @@ export default {
     }
   },
   methods: {
-    changePath(parentId) {
-      return this.$route.path;
+    changePath(pathData) {
+      if (pathData === 0) {
+        pathData = {id: 0};
+      }
+      this.$emit("search", pathData);
     },
     changeSystem(system) {
       //alert(system);
@@ -683,25 +705,6 @@ export default {
         return;
       }
 
-      /*let _children = this.path.history.find(
-        i => i.id === row[this.selfProps.pathId]
-      );
-      if (_children) {
-        // 历史找到子集时
-        this.path.history.splice(
-          this.path.history.findIndex(i => i.id === row[this.selfProps.pathId]),
-          1
-        );
-        this.routerPush(_children, _children.data);
-        return;
-      }*/
-      // 历史找不到子集时 请求更新
-      /*this.routerPush({
-        id: row[this.selfProps.pathId],
-        pid: row[this.selfProps.pathPid],
-        path: row[this.selfProps.pathName]
-      });*/
-      console.log(this.file, row, 'nnnnnnnnn');
       this.$emit("search", row, true);
     },
     // 文件、文件夹移动
@@ -888,7 +891,8 @@ export default {
           this.previewOptions = {sources: [{type: "video/mp4", src: row.url}]};
           break;
         default :
-          this.previewOptions = row.url;
+              console.log(row, 'rrrrrr');
+          this.previewOptions = {url: row.filepath};
       }
 
 
