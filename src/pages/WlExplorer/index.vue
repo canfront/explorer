@@ -293,7 +293,6 @@ export default {
     };
   },
   props: {
-    attachmentPathModel: {type: Function},
     rootPaths: {type: Object},
     pathDetail: {type: Object},
     /**
@@ -342,6 +341,69 @@ export default {
       type: String,
       default: "medium"
     }
+  },
+  computed: {
+    // 自身头部更多操作自定义内容
+    pathDetailTest() {
+    console.log(this.pathDetail, 'pppppppdd');
+    return 'ffff';
+    },
+    formatFileColumns() {
+      let _data = this.fileColumns || [];
+      _data.forEach((i, idx) => {
+        i._id = `_col_${idx}`;
+      });
+      return _data;
+    },
+    // 自身表头数据
+    formatPathColumns() {
+      let _data = this.pathColumns || [];
+      _data.forEach((i, idx) => {
+        i._id = `_col_${idx}`;
+      });
+      return _data;
+    },
+    fileSelfProps() {
+      return {
+        isLock: "isLock", // Boolean 用于有布尔值字段表示数据是否锁定文件类型的情况,当使用isLockFn函数时，此参数被忽略
+        name: "name", // String 用于显示名称列的字段
+        suffix: "suffix", // String 用于判断后缀或显示文件类型列的字段
+        match: "name", // String 用于设定输入框自动补全的匹配字段
+        ...this.fileProps
+      };
+    },
+    // 自身配置项
+    selfProps() {
+      return {
+        isLock: "isLock", // Boolean 用于有布尔值字段表示数据是否锁定文件类型的情况,当使用isLockFn函数时，此参数被忽略
+        name: "name", // String 用于显示名称列的字段
+        suffix: "suffix", // String 用于判断后缀或显示文件类型列的字段
+        match: "name", // String 用于设定输入框自动补全的匹配字段
+        ...this.props
+      };
+    },
+    // 自身移动 下拉框树 配置项
+    selfMoveProps() {
+      return {
+        label: this.selfProps.pathName,
+        children: this.selfProps.pathChildren,
+        disabled: this.selfProps.pathDisabled
+      };
+    },
+    // 将是否锁定文件、文件夹的两种判断方式合并返回
+    selfIsLock() {
+      return this.isLockFn ? "isLock" : this.selfProps.isLock;
+    },
+    // 当前是否最后一步
+    pathIsEnd() {
+      return (
+        this.path.history[this.path.history.length - 1].id === this.file.id
+      );
+    },
+    // 当前是否最后一步
+    pathIsStart() {
+      return this.path.history[0].id === this.file.id;
+    },
   },
   methods: {
     changePath(pathData) {
@@ -481,69 +543,6 @@ export default {
     // 清空关键词
     clearSearchKey() {
       this.file.key = "";
-    },
-  },
-  computed: {
-    // 自身头部更多操作自定义内容
-    pathDetailTest() {
-    console.log(this.pathDetail, 'pppppppdd');
-    return 'ffff';
-    },
-    formatFileColumns() {
-      let _data = this.fileColumns || [];
-      _data.forEach((i, idx) => {
-        i._id = `_col_${idx}`;
-      });
-      return _data;
-    },
-    // 自身表头数据
-    formatPathColumns() {
-      let _data = this.pathColumns || [];
-      _data.forEach((i, idx) => {
-        i._id = `_col_${idx}`;
-      });
-      return _data;
-    },
-    fileSelfProps() {
-      return {
-        isLock: "isLock", // Boolean 用于有布尔值字段表示数据是否锁定文件类型的情况,当使用isLockFn函数时，此参数被忽略
-        name: "name", // String 用于显示名称列的字段
-        suffix: "suffix", // String 用于判断后缀或显示文件类型列的字段
-        match: "name", // String 用于设定输入框自动补全的匹配字段
-        ...this.fileProps
-      };
-    },
-    // 自身配置项
-    selfProps() {
-      return {
-        isLock: "isLock", // Boolean 用于有布尔值字段表示数据是否锁定文件类型的情况,当使用isLockFn函数时，此参数被忽略
-        name: "name", // String 用于显示名称列的字段
-        suffix: "suffix", // String 用于判断后缀或显示文件类型列的字段
-        match: "name", // String 用于设定输入框自动补全的匹配字段
-        ...this.props
-      };
-    },
-    // 自身移动 下拉框树 配置项
-    selfMoveProps() {
-      return {
-        label: this.selfProps.pathName,
-        children: this.selfProps.pathChildren,
-        disabled: this.selfProps.pathDisabled
-      };
-    },
-    // 将是否锁定文件、文件夹的两种判断方式合并返回
-    selfIsLock() {
-      return this.isLockFn ? "isLock" : this.selfProps.isLock;
-    },
-    // 当前是否最后一步
-    pathIsEnd() {
-      return (
-        this.path.history[this.path.history.length - 1].id === this.file.id
-      );
-    },
-    // 当前是否最后一步
-    pathIsStart() {
-      return this.path.history[0].id === this.file.id;
     },
   },
 };
