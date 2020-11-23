@@ -261,7 +261,6 @@
               <cascaderLoad
                 class="u-full"
                 :size="size"
-                :data="tree_path"
                 :rootPaths="rootPaths"
                 :attachmentPathModel="attachmentPathModel"
                 v-model="upload_selected"
@@ -301,7 +300,6 @@ import fileView from "../../components/file-view.vue"; // 导入预览组件
 import fadeIn from "../../components/fade-in.vue"; // 引入滑入组件
 import cascaderLoad from "../../components/cascader-load.vue"; // 引入滑入组件
 import uploadItem from "../../components/upload-item"; // 导入导入组件
-import { arrayToTree, splicParentsUntil, download } from "../../util"; // 导入组装树函数、拼接路径函数
 const guid = "00000000-0000-0000-0000-000000000000";
 export default {
   name: "wlExplorer",
@@ -348,7 +346,6 @@ export default {
       self_data: [], // 当前数据
       file_checked_data: [], // 列表多选数据
       matched_path: false, // 路径输入框内是否有匹配到的数据
-      tree_path: [], // 全部路径树数据
       upload_selected: "", // 所选上传文件目标路径
       uoload_data: {
         pathId: null,
@@ -523,6 +520,7 @@ export default {
     },
     // 文件上传路径修改
     uploadPathChange([val]) {
+        console.log(val, 'bbbbbbbbbbbbnnnnnn');
       const pathId = val[this.selfProps.pathId];
       this.uoload_data = {
         parentPathId: val[this.selfProps.pathPid],
@@ -532,7 +530,8 @@ export default {
     },
     // 文件上传提交操作
     saveUpload() {
-      this.$emit("upload", this.uoload_data, this.handleUpload);
+        console.log(this.uoload_data, 'fffffffwwwww', this.handleUpload);
+      //this.$emit("upload", this.uoload_data, this.handleUpload);
     },
     // 手动上传文件
     handleUpload() {
@@ -677,15 +676,6 @@ export default {
         name: "name", // String 用于显示名称列的字段
         suffix: "suffix", // String 用于判断后缀或显示文件类型列的字段
         match: "name", // String 用于设定输入框自动补全的匹配字段
-        splic: true, // Boolean 用于设定输入框自动补全的匹配字段是否需要将match字段和祖先节点拼接
-        pathName: "name", // String 路径数据 显示名称字段
-        pathId: "id", // String 路径数据 id字段
-        pathPid: "pid", // String 路径数据 pid字段
-        pathChildren: "children", // String 路径数据 children字段
-        pathDisabled: "disabled", // String 路径数据 禁用字段
-        pathConnector: "\\", // String 路径父子数据拼接连接符,默认为'\'
-        pathParents: "parents", // String 路径数据所有直系祖先节点自增长identityId逗号拼接
-        pathIdentityId: "identityId", // String 路径数据自增长id
         ...this.fileProps
       };
     },
@@ -696,15 +686,6 @@ export default {
         name: "name", // String 用于显示名称列的字段
         suffix: "suffix", // String 用于判断后缀或显示文件类型列的字段
         match: "name", // String 用于设定输入框自动补全的匹配字段
-        splic: true, // Boolean 用于设定输入框自动补全的匹配字段是否需要将match字段和祖先节点拼接
-        pathName: "name", // String 路径数据 显示名称字段
-        pathId: "id", // String 路径数据 id字段
-        pathPid: "pid", // String 路径数据 pid字段
-        pathChildren: "children", // String 路径数据 children字段
-        pathDisabled: "disabled", // String 路径数据 禁用字段
-        pathConnector: "\\", // String 路径父子数据拼接连接符,默认为'\'
-        pathParents: "parents", // String 路径数据所有直系祖先节点自增长identityId逗号拼接
-        pathIdentityId: "identityId", // String 路径数据自增长id
         ...this.props
       };
     },
