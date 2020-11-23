@@ -364,6 +364,17 @@ export default {
       this.$emit("handleFolder", _act, type, this.file);
       this.closeUpload();
     },
+    // 显示上传界面
+    showUpload() {
+      this.$emit("showUpload");
+    },
+    closeUpload() {
+      this.$emit("closeUpload");
+    },
+    previewFile(row) {
+      let previewType = this.fileTypeItem(row, 'type');
+      this.$emit("previewFile", row, previewType);
+    },
     // 文件夹删除操作
     handleDel() {
       if (this.file_checked_data.length === 0) {
@@ -471,10 +482,6 @@ export default {
     clearSearchKey() {
       this.file.key = "";
     },
-    // 打开预览组件
-    showPreview() {
-      this.layout.view = true;
-    },
   },
   computed: {
     // 自身头部更多操作自定义内容
@@ -537,10 +544,6 @@ export default {
     // 当前是否最后一步
     pathIsStart() {
       return this.path.history[0].id === this.file.id;
-    },
-    // 显示上传界面
-    showUpload() {
-      this.$emit("showUpload");
     },
   },
 };
