@@ -235,79 +235,18 @@
     </el-scrollbar>
     <!-- slot 自定义dom区 -->
     <slot></slot>
-    <!-- 文件预览区 -->
-    <template v-if="usePreview">
-      <file-view
-        v-show="layout.view"
-        ref="file-view"
-        class="file-view-components"
-        :previewType="previewType"
-        :previewOptions="previewOptions"
-        @close="layout.view = false"
-      ></file-view>
-    </template>
-    <!-- 文件上传区 -->
-    <template v-if="useUpload">
-      <fade-in v-show="layout.upload">
-        <h3 class="edit-header">上传文件</h3>
-        <el-scrollbar class="scroll">
-          <el-form
-            :size="size"
-            ref="template_form"
-            label-position="top"
-            class="template_form rule-form"
-          >
-            <el-form-item label="文件路径">
-              <cascaderLoad
-                class="u-full"
-                :size="size"
-                :rootPaths="rootPaths"
-                :attachmentPathModel="attachmentPathModel"
-                v-model="upload_selected"
-                @change="uploadPathChange"
-              ></cascaderLoad>
-            </el-form-item>
-            <el-form-item label="导入文件">
-              <uploadItem
-                ref="upload-item"
-                :size="size"
-                :reg="uploadReg"
-                :url="uploadUrl"
-                :limit="uploadLimit"
-                :regFuc="uploadRegFuc"
-                :options="uploadOptions"
-                :headers="uploadHeaders"
-                @beforeUpload="uploadBefore"
-                @uploadSuccess="uploadSuccess"
-                @uploadError="uploadError"
-              ></uploadItem>
-            </el-form-item>
-          </el-form>
-        </el-scrollbar>
-        <!-- 按钮区 -->
-        <div class="submit-btn-box">
-          <submit-btn :size="size" @btn="saveUpload()" :status="load.upload">保存</submit-btn>
-          <el-button :size="size" @click="layout.upload = false">取消</el-button>
-        </div>
-      </fade-in>
-    </template>
   </div>
 </template>
 
 <script>
 import submitBtn from "../../components/submit-btn.vue"; // 导入防抖组件
-import fileView from "../../components/file-view.vue"; // 导入预览组件
 import fadeIn from "../../components/fade-in.vue"; // 引入滑入组件
-import cascaderLoad from "../../components/cascader-load.vue"; // 引入滑入组件
-import uploadItem from "../../components/upload-item"; // 导入导入组件
 const guid = "00000000-0000-0000-0000-000000000000";
 export default {
   name: "wlExplorer",
-  components: {submitBtn, fileView, fadeIn, uploadItem, cascaderLoad},
+  components: {submitBtn, fadeIn},
   data() {
     return {
-      previewType: '',
-      previewOptions: {},
       load: {
         del: false, // 删除
         move: false, // 移动
@@ -320,9 +259,9 @@ export default {
       }, // 当前上传文件状态
       layout: {
         show_list: true, // 文件展示形式
-        edit_path: false, // 是否编辑路径
-        view: false, // 预览视图
-        move: false, // 移动视图
+        //edit_path: false, // 是否编辑路径
+        //view: false, // 预览视图
+        //move: false, // 移动视图
         upload: false // 上传视图
       }, // 视图管理
       file: {
@@ -346,7 +285,6 @@ export default {
       self_data: [], // 当前数据
       file_checked_data: [], // 列表多选数据
       matched_path: false, // 路径输入框内是否有匹配到的数据
-      upload_selected: "", // 所选上传文件目标路径
       uoload_data: {
         pathId: null,
         parentPathId: null,
@@ -397,41 +335,7 @@ export default {
     allPath: Array,
     // 是否锁定文件、文件夹函数,true则不可进行操作
     isLockFn: Function,
-    // 是否使用自带上传组件
-    useUpload: {
-      type: Boolean,
-      default: true
-    },
     // 上传文件地址
-    uploadUrl: {
-      type: String,
-      default: ""
-    },
-    //  是否校验上传文件
-    uploadReg: {
-      type: Boolean,
-      default: false
-    },
-    // 上传文件前校验函数，应返回Boolean
-    uploadRegFuc: Function,
-    // 上传文件头参数
-    uploadHeaders: Object,
-    // 上传文件参数
-    uploadOptions: Object,
-    // 上传个数限制
-    uploadLimit: Number,
-    // 是否使用自带预览组件
-    usePreview: {
-      type: Boolean,
-      default: true
-    },
-    // 预览文件类型
-    /*previewType: {
-      type: String,
-      default: "img"
-    },*/
-    // 预览文件地址或配置项
-    //previewOptions: Object,
     // 拼接路径配置项
     splicOptions: Object,
     size: {
@@ -498,58 +402,6 @@ export default {
       }
 
       this.$emit("search", row, true);
-    },
-    // 显示上传界面
-    showUpload() {
-      this.upload_selected =  this.file.id;
-      this.uoload_data = {
-        parentPathId: this.file.pid,
-        pathId: this.file.id,
-        isCurrentFolder: true
-      };
-      if (this.useUpload) {
-        this.layout.upload = true;
-        this.$emit("closeFade");
-      } else {
-        this.$emit("showUpload");
-      }
-    },
-    // 关闭上传界面
-    closeUpload() {
-      this.layout.upload = false;
-    },
-    // 文件上传路径修改
-    uploadPathChange([val]) {
-        console.log(val, 'bbbbbbbbbbbbnnnnnn');
-      const pathId = val[this.selfProps.pathId];
-      this.uoload_data = {
-        parentPathId: val[this.selfProps.pathPid],
-        pathId,
-        isCurrentFolder: pathId == this.file.id
-      };
-    },
-    // 文件上传提交操作
-    saveUpload() {
-        console.log(this.uoload_data, 'fffffffwwwww', this.handleUpload);
-      //this.$emit("upload", this.uoload_data, this.handleUpload);
-    },
-    // 手动上传文件
-    handleUpload() {
-      this.$refs["upload-item"].toUpload();
-    },
-    // 文件上传成功回调
-    uploadSuccess(res) {
-      this.$emit("uploadSuccess", res);
-      this.closeUpload();
-    },
-    // 文件上传前回调
-    uploadBefore(file) {
-      this.$emit("uploadBefore", file, this.file);
-    },
-    // 文件上传失败回调
-    uploadError(err) {
-      this.$emit("uploadError", err);
-      this.load.upload = false;
     },
     pathTypeIcon(row) {
       let _path = "";
@@ -619,31 +471,6 @@ export default {
     clearSearchKey() {
       this.file.key = "";
     },
-    // 预览文件
-    previewFile(row) {
-      let previewType = this.fileTypeItem(row, 'type');
-      //previewType = 'image';
-      //previewType = 'audio';
-      //previewType = 'video';
-      //previewType = 'xlsx';
-
-      this.previewType = previewType;
-      //row.url = 'http://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/10/22/%E5%BF%85-%E8%A6%81%E7%82%B9.png';
-      //row.url = 'https://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/10/27/%E4%BA%8C%E5%AD%97%E9%80%89%E6%8B%A9%E9%A2%98%E8%AF%AD%E9%9F%B3.mp3';
-      //row.url = 'http://1254153797.vod2.myqcloud.com/41f91735vodsh1254153797/11bbe9245285890808875998543/BPgvrA4wHkkA.mp4';
-      //row.url = 'https://xsjy-1254153797.cos.ap-shanghai.myqcloud.com/smartpen/courseware/pc/2020/09/17/%E7%AB%A0%E8%8A%82.xlsx';
-      switch (previewType) {
-        case 'video':
-          this.previewOptions = {sources: [{type: "video/mp4", src: row.url}]};
-          break;
-        default :
-              console.log(row, 'rrrrrr');
-          this.previewOptions = {url: row.filepath};
-      }
-
-
-      this.$emit("preview", row, this.showPreview());
-    },
     // 打开预览组件
     showPreview() {
       this.layout.view = true;
@@ -710,6 +537,10 @@ export default {
     // 当前是否最后一步
     pathIsStart() {
       return this.path.history[0].id === this.file.id;
+    },
+    // 显示上传界面
+    showUpload() {
+      this.$emit("showUpload");
     },
   },
 };
