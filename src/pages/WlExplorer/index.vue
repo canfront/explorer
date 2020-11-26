@@ -19,7 +19,6 @@
       </el-dropdown>
       <el-form-item>
         <el-button type="primary" @click="handleFolder('add')">新增文件夹</el-button>
-        <submit-btn type="danger" :size="size" @btn="handleDel" :status="load.del">删除</submit-btn>
         <el-button @click="showUpload">上传文件</el-button>
         <!-- solt自定义头部按钮区 -->
         <slot name="header-btn"></slot>
@@ -54,7 +53,7 @@
         ></i>
         <i
           class="iconfont icon-wl-up file-path-handle"
-          :class="{'u-disabled':path.level===1}"
+          :class="{'u-disabled':pathIsEnd}"
           @click="pathBtn('top')"
         ></i>
       </el-form-item>
@@ -67,7 +66,7 @@
         <!-- 表格型文件列表 -->
         <el-table
           v-show="layout.show_list"
-          @selection-change="filrChecked"
+          @selection-change="handleSelectionPath"
           highlight-current-row
           :border="showBorder"
           :data="pathDatas"
@@ -128,6 +127,9 @@
           </el-table-column>
           <slot name="table-column-bottom"></slot>
         </el-table>
+        <div style="margin-top: 20px" v-if="pathDatas.length">
+          <el-button @click="deleteSelection('path')">删除选中的目录(只有空目录才能被删除)</el-button>
+        </div>
         <!-- 列表型文件列表 -->
         <ul class="wl-list" v-show="!layout.show_list">
           <li class="wl-list-item wl-is-folder" v-for="(i, idx) in pathDatas" :key="i.Id">
@@ -152,12 +154,12 @@
         <!-- 表格型文件列表 -->
         <el-table
           v-show="layout.show_list"
-          @selection-change="filrChecked"
+          @selection-change="handleSelectionFile"
           highlight-current-row
           :border="showBorder"
           :data="fileDatas"
           class="wl-table"
-          ref="wl-table"
+          ref="wl-table-file"
         >
           <el-table-column v-if="showCheckbox" align="center" type="selection" width="55"></el-table-column>
           <el-table-column v-if="showIndex" align="center" type="index" label="序号" width="55"></el-table-column>
@@ -213,6 +215,10 @@
           </el-table-column>
           <slot name="table-column-bottom"></slot>
         </el-table>
+        <div style="margin-top: 20px" v-if="fileDatas.length">
+          <el-button @click="deleteSelection('file')">删除选中的文件(软删除)</el-button>
+        </div>
+
         <!-- 列表型文件列表 -->
         <ul class="wl-list" v-show="!layout.show_list">
           <li class="wl-list-item wl-is-folder" v-for="(i, idx) in fileDatas" :key="i.Id">
@@ -240,23 +246,13 @@
 
 <script>
 import submitBtn from "../../components/submit-btn.vue"; // 导入防抖组件
-import fadeIn from "../../components/fade-in.vue"; // 引入滑入组件
 const guid = "00000000-0000-0000-0000-000000000000";
 export default {
   name: "wlExplorer",
-  components: {submitBtn, fadeIn},
+  components: {submitBtn},
   data() {
     return {
-      load: {
-        del: false, // 删除
-        move: false, // 移动
-        upload: false // 上传
-      }, // loading状态
-      uploading: {
-        name: "JS从脱贫到脱发你好长啊",
-        percentage: 0,
-        ing: false
-      }, // 当前上传文件状态
+      uploading: {name: "JS从脱贫到脱发你好长啊", percentage: 0, ing: false}, // 当前上传文件状态
       layout: {
         show_list: true, // 文件展示形式
         //edit_path: false, // 是否编辑路径
@@ -264,63 +260,14 @@ export default {
         //move: false, // 移动视图
         upload: false // 上传视图
       }, // 视图管理
-      file: {
-        pid: "", // 父文件夹
-        id: "", // 文件夹id
-        path: "", // 文件路径
-        key: "" // 关键字
-      }, // 文件相关参数
-      path: {
-        level: 1, // 当前层级
-        index: -1, // 在历史的第几步
-        history: [
-          {
-            path: "", // 文件夹名字
-            pid: "", // 路径
-            id: "", // 文件夹id
-            data: [] // 数据
-          }
-        ] // 历史路径
-      }, // 记录路径历史
-      self_data: [], // 当前数据
-      file_checked_data: [], // 列表多选数据
-      matched_path: false, // 路径输入框内是否有匹配到的数据
-      uoload_data: {
-        pathId: null,
-        parentPathId: null,
-        isCurrentFolder: true
-      } // 上传提交操作抛出的信息
+      multipleSelections: {},
     };
   },
   props: {
-    rootPaths: {type: Object},
     pathDetail: {type: Object},
-    /**
-     * 头部更多操作自定义内容
-     * 需要包含内容：
-     * name: String 每条数据的名字
-     * command: Function 每条数据的指令
-     * disabled: Boolean 每条数据的禁用
-     * divided: Boolean 每条数据的显示分割线
-     * icon: String 每条数据的图标类名
-     */
-    headerDropdown: Array,
-    // 是否显示复选框
-    showCheckbox: {
-      type: Boolean,
-      default: true
-    },
-    // 是否显示顺序号
-    showIndex: {
-      type: Boolean,
-      default: true
-    },
-    // 表格是否显示边框
-    showBorder: {
-      type: Boolean,
-      default: true
-    },
-    // 文件表格数据
+    showCheckbox: {type: Boolean, default: true}, // 是否显示复选框
+    showIndex: {type: Boolean, default: true}, // 是否显示顺序号
+    showBorder: {type: Boolean, default: true}, // 表格是否显示边框
     pathDatas: Array,
     fileDatas: Array,
     // 文件表头数据【[参数：所有el-Table-column Attributes] (https://element.eleme.cn/#/zh-CN/component/table)】
@@ -330,24 +277,11 @@ export default {
     currentSystem: String,
     props: Object,
     fileProps: Object,
-    // 所有文件路径 用于文件地址输入框自动提示,如不传则使用历史记录
-    allPath: Array,
     // 是否锁定文件、文件夹函数,true则不可进行操作
     isLockFn: Function,
-    // 上传文件地址
-    // 拼接路径配置项
-    splicOptions: Object,
-    size: {
-      type: String,
-      default: "medium"
-    }
+    size: {type: String, default: "medium"}
   },
   computed: {
-    // 自身头部更多操作自定义内容
-    pathDetailTest() {
-    console.log(this.pathDetail, 'pppppppdd');
-    return 'ffff';
-    },
     formatFileColumns() {
       let _data = this.fileColumns || [];
       _data.forEach((i, idx) => {
@@ -396,13 +330,13 @@ export default {
     },
     // 当前是否最后一步
     pathIsEnd() {
-      return (
+      return false;/*(
         this.path.history[this.path.history.length - 1].id === this.file.id
-      );
+      );*/
     },
     // 当前是否最后一步
     pathIsStart() {
-      return this.path.history[0].id === this.file.id;
+      return true;//this.path.history[0].id === this.file.id;
     },
   },
   methods: {
@@ -414,54 +348,6 @@ export default {
     },
     changeSystem(system) {
       //alert(system);
-    },
-    /**
-     * 文件夹编辑操作
-     * type: string 添加add 编辑edit
-     * auth: boolean 是否只修改权限
-     */
-    handleFolder(type) {
-      let [_act = null] = this.file_checked_data;
-      // 当前文件夹 文件夹操作类型 新增文件夹回调（只用于历史存储）
-      this.$emit("handleFolder", _act, type, this.file);
-      this.closeUpload();
-    },
-    // 显示上传界面
-    showUpload() {
-      this.$emit("showUpload");
-    },
-    closeUpload() {
-      this.$emit("closeUpload");
-    },
-    previewFile(row) {
-      let previewType = this.fileTypeItem(row, 'type');
-      this.$emit("previewFile", row, previewType);
-    },
-    // 文件夹删除操作
-    handleDel() {
-      if (this.file_checked_data.length === 0) {
-        this.$message({
-          showClose: true,
-          message: "请选择要删除的文件或文件夹",
-          type: "error"
-        });
-        return;
-      }
-      // 删除确认
-      this.$confirm("是否确认删除选中数据？", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.$emit("del", this.file_checked_data);
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
     },
     /**
      * 文件夹时进入下一级-文件时预览文件
@@ -485,66 +371,103 @@ export default {
     },
     // 根据文件类型显示图标
     fileTypeItem(row, type) {
-      let _path = '';
-      let _fileType = '';
-      // 其他根据后缀类型
       let _suffix = row[this.fileSelfProps.suffix];
-      if (!_suffix) {
-        _path = require("./images/file_none@3x.png");
-        _fileType = '';
-        return type == 'path' ? _path : _fileType;
+      let fileTypes = {
+        image: {path: 'img', elems: ["jpg", "jpeg", "png", "gif", "bmp"]},
+        zip: {path: 'zip', elems: ["zip", "rar", "7z"]},
+        video: {path: 'video', elems: ["avi", "mp4", "rmvb", "flv", "mov", "m2v", "mkv"]},
+        audio: {path: 'mp3', elems: ["mp3", "wav", "wmv", "wma"]},
+        xlsx: {path: 'excel', elems: ["xls", "xlsx"]},
+        docx: {path: 'docx', elems: ["doc", "docx"]},
+        pdf: {path: 'pdf', elems: ["pdf"]},
+        ppt: {path: 'ppt', elems: ['ppt']},
+        txt: {path: 'txt', elems: ['txt']},
+        none: {path: 'none', elems: []},
+      };
+
+      let currentTypeKey = 'none';
+      for (let key in fileTypes) {
+        let elems = fileTypes[key].elems;
+        if (fileTypes[key].elems.includes(_suffix)) {
+          currentTypeKey = key;
+          break;
+        }
       }
-      if (["jpg", "jpeg", "png", "gif", "bmp"].includes(_suffix)) {
-        // 图片
-        _path = require("./images/file_img@3x.png");
-        _fileType = 'image';
-      } else if (["zip", "rar", "7z"].includes(_suffix)) {
-        _path = require("./images/file_zip@3x.png");
-        _fileType = 'zip';
-      } else if (
-        ["avi", "mp4", "rmvb", "flv", "mov", "m2v", "mkv"].includes(_suffix)
-      ) {
-        _fileType = 'video';
-        _path = require("./images/file_video@3x.png");
-      } else if (["mp3", "wav", "wmv", "wma"].includes(_suffix)) {
-        _fileType = 'audio';
-        _path = require("./images/file_mp3@3x.png");
-      } else if (["xls", "xlsx"].includes(_suffix)) {
-        _fileType = 'xlsx';
-        _path = require("./images/file_excel@3x.png");
-      } else if (["doc", "docx"].includes(_suffix)) {
-        _fileType = 'docx';
-        _path = require("./images/file_docx@3x.png");
-      } else if ("pdf" == _suffix) {
-        _fileType = 'pdf';
-        _path = require("./images/file_pdf@3x.png");
-      } else if ("ppt" == _suffix) {
-        _fileType = 'ppt';
-        _path = require("./images/file_ppt@3x.png");
-      } else if ("txt" == _suffix) {
-        _fileType = 'txt';
-        _path = require("./images/file_txt@3x.png");
-      } else {
-        _fileType = 'txt';
-        _path = require("./images/file_none@3x.png");
+      if (type != 'path') {
+        return currentTypeKey;
       }
-      return type == 'path' ? _path : _fileType;
-    },
-    // 记录多选列表数据
-    filrChecked(val) {
-      this.self_data.forEach(i => (i._checked = false));
-      val.forEach(i => (i._checked = true));
-      this.file_checked_data = val;
+      let currentType = fileTypes[currentTypeKey];
+      return require('./images/file_' + currentType.path + '@3x.png');
     },
     // 列表模式记录多选数据
     listItemCheck(check, val) {
       this.$refs["wl-table"].toggleRowSelection(val);
     },
-    // 清空关键词
-    clearSearchKey() {
-      this.file.key = "";
+
+    /**
+     * 文件夹编辑操作
+     * type: string 添加add 编辑edit
+     * auth: boolean 是否只修改权限
+     */
+    handleFolder(type) {
+      this.$emit("handleFolder");
+      this.closeUpload();
     },
-  },
+    // 显示上传界面
+    showUpload() {
+      this.$emit("showUpload");
+    },
+    closeUpload() {
+      this.$emit("closeUpload");
+    },
+    previewFile(row) {
+      let previewType = this.fileTypeItem(row, 'type');
+      this.$emit("previewFile", row, previewType);
+    },
+    handleSelectionPath(val) {
+        console.log(val, 'ttttt');
+      this.multipleSelectionDeal(val, 'path');
+    },
+    handleSelectionFile(val) {
+      this.multipleSelectionDeal(val, 'file');
+    },
+    multipleSelectionDeal(rows, type) {
+        console.log(rows);
+      let selections = [];
+      if (rows) {
+        rows.forEach(row => {
+          selections.push(row.id);
+        });
+        this.multipleSelections[type] = selections;
+      }
+        console.log(this.multipleSelections, 'hhhhhhhf');
+    },
+    deleteSelection(type) {
+      let elems = this.multipleSelections[type] ? this.multipleSelections[type] : [];
+      if (elems.length == 0) {
+        this.$message({
+          showClose: true,
+          message: "请选择要删除的文件或文件夹",
+          type: "error"
+        });
+        return;
+      }
+
+      // 删除确认
+      this.$confirm("是否确认删除选中数据？", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        this.$emit("deleteSelection", type, elems);
+      }).catch(() => {
+        this.$message({
+          type: "info",
+          message: "已取消删除"
+        });
+      });
+    },
+  }
 };
 </script>
 
